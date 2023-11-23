@@ -28,8 +28,8 @@ def listtree(node, tab=0):
     childs = node.get_children()
     childs.sort(key=lambda x: x.get_node_class().value)
 
-    noline = ''
     if tab > 0:
+        noline = ''
         print(' ' * 4 * (tab - 1), end=noline)
         print('|---', end=noline)
 
@@ -164,7 +164,7 @@ Type help or ? to list commands.\n
     def do_call(self, arg):
         args = arg.split()
         if len(args) > 1:
-            plugin_name = args[0:1][0]
+            plugin_name = args[:1][0]
             method_name = args[1:2][0]
             params = args[2:]
 
@@ -174,8 +174,7 @@ Type help or ? to list commands.\n
 
             plugin_node = None
             try:
-                plugin_node = self.root.get_child(
-                    ["0:Objects", "2:" + plugin_name])
+                plugin_node = self.root.get_child(["0:Objects", f"2:{plugin_name}"])
             except BaseException:
                 print(
                     'Cannot find {0}, please check the plugin is started.'.format(plugin_name))
@@ -207,8 +206,7 @@ Type help or ? to list commands.\n
 
             plugin_node = None
             try:
-                plugin_node = self.root.get_child(
-                    ["0:Objects", "2:" + plugin_name])
+                plugin_node = self.root.get_child(["0:Objects", f"2:{plugin_name}"])
             except BaseException:
                 print(
                     'Cannot find {0}, please check the plugin is started.'.format(plugin_name))
@@ -227,7 +225,7 @@ Type help or ? to list commands.\n
         try:
             self.opcua.connect()
         except BaseException:
-            self.bye('Connect opcua server failed. %s' % self.server_uri)
+            self.bye(f'Connect opcua server failed. {self.server_uri}')
         self.root = self.opcua.get_root_node()
         try:
             self.node = self.root.get_child(["0:Objects", "2:ManagerPlugin"])

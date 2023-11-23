@@ -55,8 +55,8 @@ def _check_process_func(sym):
     for sym in ns.get_symbols():
         if sym.is_namespace() or sym.is_imported():
             logger.error(
-                "Embedding import, function and class is are not allowed in process function: '{}'!".format(
-                    sym.get_name()))
+                f"Embedding import, function and class is are not allowed in process function: '{sym.get_name()}'!"
+            )
             return False
 
         if not _check_builtin_functions(sym):
@@ -67,14 +67,14 @@ def _check_process_func(sym):
 
 def _check_builtin_functions(sym):
     if sym.get_name() in BUILTIN_FUNC_BLACKLIST:
-        logger.error("'{}' function is not allowed!".format(sym.get_name()))
+        logger.error(f"'{sym.get_name()}' function is not allowed!")
         return False
     return True
 
 
 def _check_imports(sym):
     if sym.get_name() not in IMPORTS_WHITELIST:
-        logger.error("Module imports not allowed: {}".format(sym.get_name()))
+        logger.error(f"Module imports not allowed: {sym.get_name()}")
         return False
     return True
 
@@ -116,17 +116,17 @@ def validate_udf_file(source_file):
                 # checking functions and classes
                 if sym.is_namespace() and sym.get_name() != PROCESS_FUNC_NAME:
                     logger.error(
-                        "Can't define functions or classes other than 'process': {}".format(
-                            sym.get_name()))
+                        f"Can't define functions or classes other than 'process': {sym.get_name()}"
+                    )
                     return False
 
             return True
 
         except Exception as e:
-            logger.error('Loading UDF file error: ' + str(e))
+            logger.error(f'Loading UDF file error: {str(e)}')
             return False
 
 
 if __name__ == "__main__":
-    print("UDF Source file is: " + SOURCE)
-    print("Checking if UDF is valid: " + str(validate_udf_file(SOURCE)))
+    print(f"UDF Source file is: {SOURCE}")
+    print(f"Checking if UDF is valid: {str(validate_udf_file(SOURCE))}")

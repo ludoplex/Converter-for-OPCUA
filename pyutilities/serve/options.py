@@ -52,7 +52,7 @@ class Options(object):
     def parse_plugins(self):
         enabled_list = self.config.get('Plugin', 'enabled').split(',')
         for name in enabled_list:
-            section_name = name + '_plugin'
+            section_name = f'{name}_plugin'
             plugin_name = self.config.get(section_name, 'name')
             auto_start = self.config.getboolean(section_name, 'auto_start')
             auto_restart = self.config.getboolean(section_name, 'auto_restart')

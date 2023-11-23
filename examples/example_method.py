@@ -63,19 +63,19 @@ if __name__ == "__main__":
         server_cert,client_cert,private_key = uasecurity.get_certificates()
         mode = uasecurity.get_securitymode()
         policy = uasecurity.get_securitypolicy()
-        if server_cert == None:
+        if server_cert is None:
             print('tls is enabled, but server cert is missing with current configuration')
             sys.exit(-1)
-        if private_key == None:
+        if private_key is None:
             print('tls is enabled, but private key is missing with current configuration')
             sys.exit(-1)
         #client.load_client_certificate(server_cert)
         #client.load_private_key(private_key)
         client.set_security(
-            getattr(crypto.security_policies, 'SecurityPolicy' + policy),
+            getattr(crypto.security_policies, f'SecurityPolicy{policy}'),
             server_cert,
             private_key,
-            mode=getattr(ua.MessageSecurityMode, mode)
+            mode=getattr(ua.MessageSecurityMode, mode),
         )
 
     try:

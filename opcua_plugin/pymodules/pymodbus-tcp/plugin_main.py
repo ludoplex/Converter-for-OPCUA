@@ -129,8 +129,7 @@ class ModbusPluginClient(BasePluginClient):
         res = []
         client_list = []
         if uri:
-            c = self.modbus_clients.get(uri, None)
-            if c:
+            if c := self.modbus_clients.get(uri, None):
                 client_list.append(c)
         else:
             client_list = self.modbus_clients.values()
@@ -162,9 +161,7 @@ class ModbusPluginClient(BasePluginClient):
             self.pub_event(device.name, msg, '')
 
     def _fetch_client(self, uri):
-        if uri in self.modbus_clients:
-            return self.modbus_clients[uri]
-        return None
+        return self.modbus_clients[uri] if uri in self.modbus_clients else None
 
     def connect(self, uri):
         ret_code = 1
@@ -203,8 +200,7 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             if client['predefined']:
                 result = 'disconnect not allow'
             else:
@@ -218,19 +214,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rq = client['client'].write_coil(address, value)
                 if rq.function_code < 0x80:
                     ret_code = ReturnCodes.Good
                     result = 'OK'
                 else:
-                    result = 'failed with function_code%s' % rq.function_code
+                    result = f'failed with function_code{rq.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception("ModbusPlugin: Failed to write_register")
@@ -242,19 +235,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rq = client['client'].write_register(address, value)
                 if rq.function_code < 0x80:
                     ret_code = ReturnCodes.Good
                     result = 'OK'
                 else:
-                    result = 'failed with function_code%s' % rq.function_code
+                    result = f'failed with function_code{rq.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception("ModbusPlugin: Failed to write_register")
@@ -266,19 +256,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rr = client['client'].read_coils(address, count)
                 if rr.function_code < 0x80:
                     ret_code = ReturnCodes.Good
-                    result = str(rr.bits[0:count])
+                    result = str(rr.bits[:count])
                 else:
-                    result = 'failed with function_code%s' % rr.function_code
+                    result = f'failed with function_code{rr.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception("ModbusPlugin: Failed to read_coils")
@@ -290,19 +277,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rr = client['client'].read_discrete_inputs(address, count)
                 if rr.function_code < 0x80:
                     ret_code = ReturnCodes.Good
-                    result = str(rr.bits[0:count])
+                    result = str(rr.bits[:count])
                 else:
-                    result = 'failed with function_code%s' % rr.function_code
+                    result = f'failed with function_code{rr.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception(
@@ -315,19 +299,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rr = client['client'].read_holding_registers(address, count)
                 if rr.function_code < 0x80:
                     ret_code = ReturnCodes.Good
-                    result = str(rr.registers[0:count])
+                    result = str(rr.registers[:count])
                 else:
-                    result = 'failed with function_code%s' % rr.function_code
+                    result = f'failed with function_code{rr.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception(
@@ -340,19 +321,16 @@ class ModbusPluginClient(BasePluginClient):
         ret_code = 1
         result = 'device not found'
 
-        client = self._fetch_client(uri)
-        if client:
+        if client := self._fetch_client(uri):
             try:
                 rr = client['client'].read_input_registers(address, count)
                 if rr.function_code < 0x80:
                     ret_code = ReturnCodes.Good
-                    result = str(rr.registers[0:count])
+                    result = str(rr.registers[:count])
                 else:
-                    result = 'failed with function_code%s' % rr.function_code
+                    result = f'failed with function_code{rr.function_code}'
             except ConnectionException as e:
-                logger.exception(
-                    "ModbusPlugin: Failed to connect %s" %
-                    client['uri'])
+                logger.exception(f"ModbusPlugin: Failed to connect {client['uri']}")
                 result = 'error'
             except Exception as e:
                 logger.exception(
@@ -365,16 +343,15 @@ class ModbusPluginClient(BasePluginClient):
         result = None
         try:
             inputs_bits = [0] * len(valid_inputs)
-            offset = 0
-            for inputs in valid_inputs:
-                if datatype is MBDataType.DISCRETE_INPUTS:
-                    rr = client.read_discrete_inputs(int(inputs[0]), 1, unit=1)
-                else:
-                    rr = client.read_coils(int(inputs[0]), 1, unit=1)
+            for offset, inputs in enumerate(valid_inputs):
+                rr = (
+                    client.read_discrete_inputs(int(inputs[0]), 1, unit=1)
+                    if datatype is MBDataType.DISCRETE_INPUTS
+                    else client.read_coils(int(inputs[0]), 1, unit=1)
+                )
                 # Test to generate random value, remove if the modus server is ready
                 # seed = random.randint(0, 1)
                 inputs_bits[offset] = 1 if rr.bits[0] else 0
-                offset += 1
             result = inputs_bits
         except ConnectionException as e:
             logger.exception("ModbusPlugin: Failed to connect")
@@ -387,16 +364,15 @@ class ModbusPluginClient(BasePluginClient):
         result = None
         try:
             rr_data = [0] * len(valid_registers)
-            offset = 0
-            for registers in valid_registers:
-                if datatype is MBDataType.INPUT_REGS:
-                    rr = client.read_input_registers(
-                        int(registers[0]), 1, unit=1)
-                else:
-                    rr = client.read_holding_registers(
-                        int(registers[0]), 1, unit=1)
+            for offset, registers in enumerate(valid_registers):
+                rr = (
+                    client.read_input_registers(int(registers[0]), 1, unit=1)
+                    if datatype is MBDataType.INPUT_REGS
+                    else client.read_holding_registers(
+                        int(registers[0]), 1, unit=1
+                    )
+                )
                 rr_data[offset] = rr.registers[0]
-                offset += 1
             result = rr_data
         except ConnectionException as e:
             logger.exception("ModbusPlugin: Failed to connect")
@@ -429,8 +405,8 @@ class ModbusPluginClient(BasePluginClient):
                     if not client['connected']:
                         client['client'].close()
                         client['connected'] = client['client'].connect()
-                        if not client['connected']:
-                            continue
+                    if not client['connected']:
+                        continue
 
                     node = self.entity.get_property(device_node, 'valid coils')
                     if node and node.value:

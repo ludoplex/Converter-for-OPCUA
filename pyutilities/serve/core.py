@@ -61,8 +61,7 @@ class PluginManager(object):
 
     def start_plugin(self, name):
         result = {'Success': False, 'Error': False}
-        process = self.processes.get(name, None)
-        if process:
+        if process := self.processes.get(name, None):
             if process.state == 'STOPPED':
                 if process.start():
                     result['Success'] = 'OK'
@@ -76,8 +75,7 @@ class PluginManager(object):
 
     def stop_plugin(self, name):
         result = {'Success': False, 'Error': False}
-        process = self.processes.get(name, None)
-        if process:
+        if process := self.processes.get(name, None):
             if not process.is_manager_process:
                 process.stop()
                 result['Success'] = 'OK'
@@ -89,8 +87,6 @@ class PluginManager(object):
 
     def get_plugin_list(self):
         print('core get_plugin_list')
-        result = {'Success': False, 'Error': False}
-
         ps = []
         for key, p in self.processes.items():
             obj = {
@@ -101,13 +97,11 @@ class PluginManager(object):
                 obj['start_time'] = format_humer_time(p.start_time)
 
             ps.append(obj)
-        result['Success'] = ps
-        return result
+        return {'Error': False, 'Success': ps}
 
     def getcfg(self, name, cfg_type):
         result = {'Success': False, 'Error': False}
-        process = self.processes.get(name, None)
-        if process:
+        if process := self.processes.get(name, None):
             plugin_home = os.path.join(
                 self.options.get_plugin_folder(),
                 process.config['folder'])
@@ -134,8 +128,7 @@ class PluginManager(object):
 
     def setcfg(self, name, cfg_type, s):
         result = {'Success': False, 'Error': False}
-        process = self.processes.get(name, None)
-        if process:
+        if process := self.processes.get(name, None):
             if process.state == 'STOPPED':
                 plugin_home = os.path.join(
                     self.options.get_plugin_folder(),

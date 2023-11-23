@@ -33,10 +33,7 @@ class UaLogger(object):
         self.logger = logger
 
     def get_loggerformat(self):
-        if self.configdict['format'] == 'standard':
-            return "%(asctime)s %(levelname)s %(filename)s:%(lineno)s - %(message)s"
-        else:
-            return "%(asctime)s %(levelname)s %(filename)s:%(lineno)s - %(message)s"
+        return "%(asctime)s %(levelname)s %(filename)s:%(lineno)s - %(message)s"
 
     def get_loggerlevel(self):
         if self.configdict['level'] == 'critical':

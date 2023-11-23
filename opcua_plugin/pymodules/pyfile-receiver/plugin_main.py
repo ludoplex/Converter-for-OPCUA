@@ -101,35 +101,33 @@ class FileReceiverPluginClient(BasePluginClient):
 
     def is_client_connected(self, name):
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 return c['connected']
         return False
 
     def get_client_state(self, name):
-        res = []
         client_list = []
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 client_list.append(c)
         else:
             client_list = self.mqtt_clients.values()
 
-        for client in client_list:
-            res.append(json.dumps({
-                'name': client['name'],
-                'connected': client['connected'],
-                'host': client['host'],
-                'port': client['port'],
-            }))
-
-        return res
+        return [
+            json.dumps(
+                {
+                    'name': client['name'],
+                    'connected': client['connected'],
+                    'host': client['host'],
+                    'port': client['port'],
+                }
+            )
+            for client in client_list
+        ]
 
     def restart(self, name):
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 self.mqtt_connect(c)
                 self.mqtt_disconnect(c)
         else:
@@ -143,30 +141,27 @@ class FileReceiverPluginClient(BasePluginClient):
         return prefix != curdir
 
     def fread(self, filename):
-        file_path = self.folder_path + '/' + filename
+        file_path = f'{self.folder_path}/{filename}'
         if self.traversal(file_path):
             logger.info("file path error: ", file_path)
             return {
                 'code': ReturnCodes.PLUGIN_ParamError,
                 'data': 'File Name Error'}
         try:
-            file_handle = open(file_path, 'rb')
-            file_data = file_handle.read()
-            file_handle.close()
+            with open(file_path, 'rb') as file_handle:
+                file_data = file_handle.read()
         except Exception as e:
             logger.exception("fread error: %s", e.strerror)
             return {'code': ReturnCodes.PLUGIN_ParamError, 'data': e.strerror}
 
-        if isinstance(file_data, bytes):
-            base64_bytes = b64encode(file_data)
-            base64_string = base64_bytes.decode('utf-8')
-            json_out = {'code': ReturnCodes.Good, 'data': base64_string}
-        else:
+        if not isinstance(file_data, bytes):
             return {
                 'code': ReturnCodes.PLUGIN_ParamError,
                 'data': 'File data corruption'}
 
-        return json_out
+        base64_bytes = b64encode(file_data)
+        base64_string = base64_bytes.decode('utf-8')
+        return {'code': ReturnCodes.Good, 'data': base64_string}
 
     def plugin_call(self, method, msg):
         json_out = super(
@@ -214,20 +209,16 @@ class FileReceiverPluginClient(BasePluginClient):
             client.subscribe(datatopic.value, 0)
 
         self.mqtt_clients[device_node.name]['connected'] = True
-        logger.info(
-            'mqtt plugin connected the broker (%s) success' %
-            device_node.name)
+        logger.info(f'mqtt plugin connected the broker ({device_node.name}) success')
 
     def mqtt_on_disconnect(self, client, userdata, rc):
         device_node = userdata
         self.mqtt_clients[device_node.name]['connected'] = False
-        logger.info(
-            'mqtt plugin disconnect the broker (%s)' %
-            device_node.name)
+        logger.info(f'mqtt plugin disconnect the broker ({device_node.name})')
 
     def mqtt_on_message(self, client, userdata, msg):
-        logger.debug(msg.topic + ":" + str(msg.payload.decode()))
-        logger.debug(msg.topic + ":" + msg.payload.decode())
+        logger.debug(f"{msg.topic}:{str(msg.payload.decode())}")
+        logger.debug(f"{msg.topic}:{msg.payload.decode()}")
 
         device_node = userdata
         message_str = msg.payload.decode()

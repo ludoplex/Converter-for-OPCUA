@@ -72,9 +72,8 @@ class AMQPConn(object):
                         result, ensure_ascii=False), properties)
                 response.content_type = 'application/json'
                 response.publish(message.reply_to)
-        else:
-            if self.notif_callback:
-                self.notif_callback(json_in)
+        elif self.notif_callback:
+            self.notif_callback(json_in)
         message.ack()
 
     def _on_response(self, message):
@@ -174,8 +173,7 @@ class AMQPConn(object):
                 if self._stopped.is_set() is True:
                     break
                 need_reconnect = True
-                pass
-            if need_reconnect is True:
+            if need_reconnect:
                 self.channel.stop_consuming()
                 self.channel.close()
                 self.channel = None

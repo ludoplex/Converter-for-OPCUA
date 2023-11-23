@@ -54,16 +54,15 @@ class BasePluginConfig(object):
                 self.env['Logging']['output'] = log_type
 
             if log_type in ['file', 'all']:
-                log_file = self.config.get('Logging', 'file')
-                if not log_file:
+                if log_file := self.config.get('Logging', 'file'):
+                    self.env['Logging']['fp'] = log_file
+
+                else:
                     logger.error("config file Logging section has error")
                     raise Exception(
                         '%s : Logging section file option incorrect',
                         os.path.basename(
                             self.env_fp))
-                else:
-                    self.env['Logging']['fp'] = log_file
-
             try:
                 self.env['Logging']['level_str'] = self.config.get(
                     'Logging', 'level')

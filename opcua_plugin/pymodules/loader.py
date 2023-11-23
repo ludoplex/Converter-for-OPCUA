@@ -29,8 +29,7 @@ logger = LogService.getLogger(__name__)
 
 
 def load_plugin(name):
-    mod = __import__('%s.plugin_main' % name, fromlist=[name])
-    return mod
+    return __import__(f'{name}.plugin_main', fromlist=[name])
 
 
 def call_plugin(name, *args, **kwargs):
@@ -54,20 +53,18 @@ if __name__ == "__main__":
 
         conf_list = []
         for (root, dirs, files) in os.walk(os.path.abspath(plugin_path)):
-            for f in files:
-                if os.path.splitext(f)[1] == '.conf':
-                    conf_list.append(os.path.join(root, f))
-
+            conf_list.extend(
+                os.path.join(root, f)
+                for f in files
+                if os.path.splitext(f)[1] == '.conf'
+            )
         if len(conf_list) > 1:
             raise Exception(
                 'The folder contains multiple configuration files : %s',
                 plugin_path)
-        elif len(conf_list) < 1:
+        elif not conf_list:
             logger.warn(
                 'The configuration file is not found, use the default configuration')
-        else:
-            pass
-
         for entity_file in os.listdir(plugin_path):
             if entity_file.endswith(".json"):
                 call_plugin(

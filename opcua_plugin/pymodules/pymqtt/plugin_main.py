@@ -120,42 +120,44 @@ class MqttPluginClient(BasePluginClient):
         }
 
     def getcli(self, host_str):
-        for client in self.mqtt_clients.values():
-            if host_str == client['name']:
-                return client
-        return None
+        return next(
+            (
+                client
+                for client in self.mqtt_clients.values()
+                if host_str == client['name']
+            ),
+            None,
+        )
 
     def is_client_connected(self, name):
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 return c['connected']
         return False
 
     def get_client_state(self, name):
-        res = []
         client_list = []
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 client_list.append(c)
         else:
             client_list = self.mqtt_clients.values()
 
-        for client in client_list:
-            res.append(json.dumps({
-                'name': client['name'],
-                'connected': client['connected'],
-                'host': client['host'],
-                'port': client['port'],
-            }))
-
-        return res
+        return [
+            json.dumps(
+                {
+                    'name': client['name'],
+                    'connected': client['connected'],
+                    'host': client['host'],
+                    'port': client['port'],
+                }
+            )
+            for client in client_list
+        ]
 
     def restart(self, name):
         if name:
-            c = self.mqtt_clients.get(name, None)
-            if c:
+            if c := self.mqtt_clients.get(name, None):
                 self.mqtt_connect(c)
                 self.mqtt_disconnect(c)
         else:
@@ -191,15 +193,11 @@ class MqttPluginClient(BasePluginClient):
                     tls_version=ssl.PROTOCOL_TLSv1,
                     ciphers=None)
             else:
-                logger.info(
-                    'The key files are not extists by (%s)' %
-                    mqtt_c['name'])
+                logger.info(f"The key files are not extists by ({mqtt_c['name']})")
         try:
             client.connect(mqtt_c['host'], int(mqtt_c['port']), 60)
         except BaseException:
-            logger.info(
-                'mqtt plugin connected the broker (%s) fail' %
-                mqtt_c['name'])
+            logger.info(f"mqtt plugin connected the broker ({mqtt_c['name']}) fail")
         client.loop_start()
         mqtt_c['client'] = client
 
@@ -236,16 +234,12 @@ class MqttPluginClient(BasePluginClient):
             client.subscribe(blobtopic.value, 0)
 
         self.mqtt_clients[device_node.name]['connected'] = True
-        logger.info(
-            'mqtt plugin connected the broker (%s) success' %
-            device_node.name)
+        logger.info(f'mqtt plugin connected the broker ({device_node.name}) success')
 
     def mqtt_on_disconnect(self, client, userdata, rc):
         device_node = userdata
         self.mqtt_clients[device_node.name]['connected'] = False
-        logger.info(
-            'mqtt plugin disconnect the broker (%s)' %
-            device_node.name)
+        logger.info(f'mqtt plugin disconnect the broker ({device_node.name})')
 
     def mqtt_on_message(self, client, userdata, msg):
         device_node = userdata
@@ -254,8 +248,8 @@ class MqttPluginClient(BasePluginClient):
         if blobtopic is not None and blobtopic.value == msg.topic:
             self.on_blob_message(userdata, msg.payload)
         else:
-            logger.debug(msg.topic + ":" + str(msg.payload.decode()))
-            logger.debug(msg.topic + ":" + msg.payload.decode())
+            logger.debug(f"{msg.topic}:{str(msg.payload.decode())}")
+            logger.debug(f"{msg.topic}:{msg.payload.decode()}")
 
             message_str = msg.payload.decode()
             node = self.entity.get_node_by_val(msg.topic, device_node)
@@ -285,8 +279,6 @@ class MqttPluginClient(BasePluginClient):
                     file_path, "wb")
                 self.mqtt_clients[device_node.name]['blob_hash'] = hashlib.md5()
                 return
-            else:
-                pass
         self.mqtt_clients[device_node.name]['blob_hash'].update(msg)
         fout.write(msg)
 

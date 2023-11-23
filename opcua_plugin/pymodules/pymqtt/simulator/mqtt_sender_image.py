@@ -77,18 +77,17 @@ def file():
 def image_check(path):
     iterms = os.listdir(path)
     iterms = sorted(iterms, key=lambda x: filetime(x), reverse=False)
-    print('------' + str(len(iterms)))
+    print(f'------{len(iterms)}')
     if len(iterms) >= 100:
         i = 0
         while (i <= len(iterms) - 100):
             os.remove(path + iterms[i])
-            i = i + 1
+            i += 1
 
 
 def filetime(file):
     stat_file = os.stat(folder_path + file)
-    last_access_time = stat_file.st_atime
-    return last_access_time
+    return stat_file.st_atime
 
 
 if __name__ == "__main__":

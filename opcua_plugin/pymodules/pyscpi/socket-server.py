@@ -40,7 +40,7 @@ while not STOP_CHAT:
     logger.debug("wating incoming connections，listening port: %d" % (PORT))
     tcpClientSock, addr = sock.accept()
     #print('accept connection from: %s ')
-    logger.debug('accept connection from: %s:%s' % (HOST, PORT))
+    logger.debug(f'accept connection from: {HOST}:{PORT}')
     while True:
         try:
             data = tcpClientSock.recv(BUFSIZ)
@@ -50,7 +50,7 @@ while not STOP_CHAT:
             break
         if not data:
             break
-        s = 'return data-%s from %s' % (data, addr[0])
+        s = f'return data-{data} from {addr[0]}'
         logger.debug(s)
         tcpClientSock.send(s.encode('ascii'))  # .encode('utf8'))
         logger.debug(data.decode('utf8'))

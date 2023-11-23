@@ -37,16 +37,10 @@ class UaSecurity(object):
         return 'open'
 
     def get_securitymode(self):
-        mode = None
-        if 'mode' in self.configdict:
-            mode = self.configdict['mode']
-        return mode
+        return self.configdict['mode'] if 'mode' in self.configdict else None
 
     def get_securitypolicy(self):
-        policy = None
-        if 'policy' in self.configdict:
-            policy = self.configdict['policy']
-        return policy
+        return self.configdict['policy'] if 'policy' in self.configdict else None
 
     def get_certificates(self):
         server_cert = None
@@ -71,12 +65,13 @@ class UaAmqpSecurity(object):
         self.section = self.config.fetchSection('Amqp')
 
     def get_tls_confg(self):
-        tls_config = None
-        if self.section.getboolean('tls'):
-            tls_config = {
+        return (
+            {
                 'tls': True,
                 'cafile': self.section.get('cafile'),
                 'cerfile': self.section.get('cerfile'),
                 'keyfile': self.section.get('keyfile'),
             }
-        return tls_config
+            if self.section.getboolean('tls')
+            else None
+        )

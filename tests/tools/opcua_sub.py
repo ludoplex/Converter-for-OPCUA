@@ -56,8 +56,7 @@ class OpcuaSubClient():
             self.sub = None
 
     def subscribe(self, qualified_list):
-        val_node = self.root.get_child(qualified_list)
-        if val_node:
+        if val_node := self.root.get_child(qualified_list):
             self.handle = self.sub.subscribe_data_change(val_node)
 
     def unsubscribe(self):

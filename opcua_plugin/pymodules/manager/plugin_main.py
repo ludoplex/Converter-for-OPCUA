@@ -234,8 +234,7 @@ class ManagerPluginClient(BasePluginClient):
             if remaining <= 0.0:
                 raise PluginRequestTimeout
 
-            res = self.rfile.readline(timeout=1)
-            if res:
+            if res := self.rfile.readline(timeout=1):
                 try:
                     data = json.loads(res)
                 except BaseException:

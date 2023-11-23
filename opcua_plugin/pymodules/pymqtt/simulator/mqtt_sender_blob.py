@@ -73,7 +73,7 @@ def c_publish(client, topic, out_message, qos):
     if res == 0:  # published ok
         if wait_for(client, "PUBACK", running_loop=True):
             if mid == client.mid_value:
-                print("match mid ", str(mid))
+                print("match mid ", mid)
                 client.puback_flag = False  # reset flag
             else:
                 raise SystemExit("not got correct puback mid so quitting")
@@ -107,8 +107,7 @@ out_hash_md5 = hashlib.md5()
 # in_hash_md5 = hashlib.md5()
 
 while Run_flag:
-    chunk = fo.read(data_block_size)
-    if chunk:
+    if chunk := fo.read(data_block_size):
         out_hash_md5.update(chunk)  # update hash
         out_message = chunk
         #print(" length =",type(out_message))

@@ -18,9 +18,9 @@ import sys
 import unittest
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, SCRIPT_DIR + '/../')
-sys.path.insert(0, SCRIPT_DIR + '/../../../../pyutilities')
-sys.path.insert(0, SCRIPT_DIR + '/../../')
+sys.path.insert(0, f'{SCRIPT_DIR}/../')
+sys.path.insert(0, f'{SCRIPT_DIR}/../../../../pyutilities')
+sys.path.insert(0, f'{SCRIPT_DIR}/../../')
 
 from plugin_main import MqttPluginEntity
 from plugin_main import MqttPluginConfig
@@ -29,8 +29,8 @@ from plugin_main import MqttPluginClient
 
 class TestPluginMain(unittest.TestCase):
     def setUp(self):
-        e = MqttPluginEntity(SCRIPT_DIR + '/../plugin_mqtt.json')
-        c = MqttPluginConfig(SCRIPT_DIR + '/../default.conf')
+        e = MqttPluginEntity(f'{SCRIPT_DIR}/../plugin_mqtt.json')
+        c = MqttPluginConfig(f'{SCRIPT_DIR}/../default.conf')
         self.t = MqttPluginClient(e, c)
         self.t.start()
 

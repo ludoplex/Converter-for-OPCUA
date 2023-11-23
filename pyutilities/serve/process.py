@@ -99,9 +99,7 @@ class Subprocess(object):
         )
         self._thread.setDaemon(True)
         self._thread.start()
-        if not finish_evt.wait(1.5):
-            return True
-        return False
+        return not finish_evt.wait(1.5)
 
     def start(self):
         self.manual_stop = False
@@ -162,8 +160,7 @@ class ManagerSubprocess(Subprocess):
             if line:
                 line = line.decode()
                 print('recv = ', line)
-                req = self.check_input(line)
-                if req:
+                if req := self.check_input(line):
                     self.dispatch(req)
 
     def check_input(self, line):
@@ -171,9 +168,7 @@ class ManagerSubprocess(Subprocess):
         action = request.get('action', None)
         data = request.get('data', None)
 
-        if (action is not None) and (data is not None):
-            return request
-        return None
+        return request if (action is not None) and (data is not None) else None
         # try:
         #     request = json.loads(line)
         #     if request.get('action') and request.get('data'):
