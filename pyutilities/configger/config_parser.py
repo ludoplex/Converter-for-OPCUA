@@ -22,21 +22,19 @@ import configparser
 class ConfigLoader(object):
 
     def __init__(self, credential='default.conf'):
-        if credential == 'default.conf':
-            self._config_file = os.path.dirname(
-                os.path.realpath(__file__)) + '/' + credential
-        else:
-            self._config_file = credential
+        self._config_file = (
+            f'{os.path.dirname(os.path.realpath(__file__))}/{credential}'
+            if credential == 'default.conf'
+            else credential
+        )
         if not os.path.exists(self._config_file):
-            print('error: credential file is not found - ' + credential)
+            print(f'error: credential file is not found - {credential}')
             return
         self.cfgparser = configparser.ConfigParser()
         self.cfgparser.read(self._config_file)
 
     def fetchSection(self, section):
-        if self.cfgparser.has_section(section):
-            return self.cfgparser[section]
-        return None
+        return self.cfgparser[section] if self.cfgparser.has_section(section) else None
 
     def ConfigSectionMap(self, section):
         config_dict = {}
@@ -45,8 +43,8 @@ class ConfigLoader(object):
             try:
                 config_dict[option] = self.cfgparser.get(section, option)
                 if config_dict[option] == -1:
-                    print("ConfigLoader: skip %s" % option)
+                    print(f"ConfigLoader: skip {option}")
             except BaseException:
-                print("exception on %s!" % option)
+                print(f"exception on {option}!")
                 config_dict[option] = None
         return config_dict

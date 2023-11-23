@@ -17,8 +17,8 @@ import sys
 import unittest
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, SCRIPT_DIR + '/../')
-sys.path.insert(0, SCRIPT_DIR + '/../../../../pyutilities')
+sys.path.insert(0, f'{SCRIPT_DIR}/../')
+sys.path.insert(0, f'{SCRIPT_DIR}/../../../../pyutilities')
 
 from check_udf import validate_udf_file
 
@@ -35,7 +35,7 @@ class TestCheckUDF(unittest.TestCase):
 
     def test_check_udf_file_good(self):
         for udf_file in os.listdir(UDF_GOOD_DIR):
-            print('\nChecking file "{}"'.format(udf_file))
+            print(f'\nChecking file "{udf_file}"')
             self.assertTrue(
                 validate_udf_file(
                     os.path.join(
@@ -44,7 +44,7 @@ class TestCheckUDF(unittest.TestCase):
 
     def test_check_udf_file_bad(self):
         for udf_file in os.listdir(UDF_BAD_DIR):
-            print('\nChecking file "{}"'.format(udf_file))
+            print(f'\nChecking file "{udf_file}"')
             self.assertFalse(
                 validate_udf_file(
                     os.path.join(

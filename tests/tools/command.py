@@ -41,11 +41,11 @@ def listtree(node, tab=0, level=2, out=sys.stdout):
 
 
 def data_type_to_string(dtype):
-    if dtype.Identifier in ua.ObjectIdNames:
-        string = ua.ObjectIdNames[dtype.Identifier]
-    else:
-        string = dtype.to_string()
-    return string
+    return (
+        ua.ObjectIdNames[dtype.Identifier]
+        if dtype.Identifier in ua.ObjectIdNames
+        else dtype.to_string()
+    )
 
 
 def attr_to_enum(attr):
@@ -57,8 +57,7 @@ def attr_to_enum(attr):
 
 def enum_to_string(attr, val):
     attr_enum = attr_to_enum(attr)
-    string = ", ".join([e.name for e in attr_enum.parse_bitfield(val)])
-    return string
+    return ", ".join([e.name for e in attr_enum.parse_bitfield(val)])
 
 
 def show_attrs(attrs):
@@ -194,8 +193,7 @@ Type help or ? to list commands.\n
                     level = int(a)
                     verified = True
                 except:
-                    m = re.match(r'^max-depth=(\d+)$', a)
-                    if m:
+                    if m := re.match(r'^max-depth=(\d+)$', a):
                         level = int(m.group(1))
                         verified = True
             else:
@@ -214,10 +212,10 @@ Type help or ? to list commands.\n
         verified, level = self.check_tree_arg(arg)
         if verified:
             cwd = os.getcwd()
-            dest_fp = os.path.join(cwd, '{}.tree'.format(self.node.get_display_name().Text))
+            dest_fp = os.path.join(cwd, f'{self.node.get_display_name().Text}.tree')
             with open(dest_fp, 'w') as df:
                 listtree(self.node, tab=0, level=level, out=df)
-                print('saved file to {}'.format(dest_fp))
+                print(f'saved file to {dest_fp}')
 
         else:
             print('example : dump_tree | dump_tree 2 | dump_tree max-depth=2')
@@ -267,7 +265,7 @@ Type help or ? to list commands.\n
             if not self.check_connect():
                 return
 
-            method_name = args[0:1][0]
+            method_name = args[:1][0]
             params = args[1:]
 
             methods = self.node.get_methods()
@@ -301,14 +299,15 @@ Type help or ? to list commands.\n
             plugin_name = args[1]
             ftype = args[2]
             fp = args[3]
-            manage_plugin_node = None
-
             objects = self.opcua.get_objects_node().get_children()
-            for n in objects:
-                if n.get_display_name().to_string() == manage_plugin_name:
-                    manage_plugin_node = n
-                    break
-
+            manage_plugin_node = next(
+                (
+                    n
+                    for n in objects
+                    if n.get_display_name().to_string() == manage_plugin_name
+                ),
+                None,
+            )
             if not manage_plugin_node:
                 print('Can not find ({0}) manage plugin node'.format(manage_plugin_name))
                 return
@@ -360,14 +359,15 @@ Type help or ? to list commands.\n
             plugin_name = args[1]
             ftype = args[2]
             dirname = args[3]
-            manage_plugin_node = None
-
             objects = self.opcua.get_objects_node().get_children()
-            for n in objects:
-                if n.get_display_name().to_string() == manage_plugin_name:
-                    manage_plugin_node = n
-                    break
-
+            manage_plugin_node = next(
+                (
+                    n
+                    for n in objects
+                    if n.get_display_name().to_string() == manage_plugin_name
+                ),
+                None,
+            )
             if not manage_plugin_node:
                 print('Can not find ({0}) manage plugin node'.format(manage_plugin_name))
                 return
@@ -383,10 +383,7 @@ Type help or ? to list commands.\n
                             with open(os.path.join(dirname, result['Success']['filename']), "w") as f:
                                 f.write(result['Success']['data'])
 
-                            print('saved file to %s' % os.path.join(
-                                dirname,
-                                result['Success']['filename']
-                            ))
+                            print(f"saved file to {os.path.join(dirname, result['Success']['filename'])}")
                     else:
                         print(code, data)
                 except Exception as e:
@@ -421,12 +418,13 @@ Type help or ? to list commands.\n
         exit(1)
 
     def get_all_attrs(self):
-        attrs = [attr for attr in ua.AttributeIds]
+        attrs = list(ua.AttributeIds)
         dvs = self.node.get_attributes(attrs)
-        res = []
-        for idx, dv in enumerate(dvs):
-            if dv.StatusCode.is_good():
-                res.append((attrs[idx], dv))
+        res = [
+            (attrs[idx], dv)
+            for idx, dv in enumerate(dvs)
+            if dv.StatusCode.is_good()
+        ]
         res.sort(key=lambda x: x[0].name)
         return res
 

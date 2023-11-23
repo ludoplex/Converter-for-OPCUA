@@ -31,23 +31,13 @@ class UaStorage(object):
         self.configdict = self.config.ConfigSectionMap('Storage')
 
     def get_storagetype(self):
-        if 'dataset' in self.configdict:
-            return self.configdict['dataset']
-        return 'memory'
+        return self.configdict['dataset'] if 'dataset' in self.configdict else 'memory'
 
     def get_sqliteconfig(self):
-        if 'path' in self.configdict:
-            return self.configdict['path']
-        return 'default.db'
+        return self.configdict['path'] if 'path' in self.configdict else 'default.db'
 
     def get_mongoconfig(self):
-        host = 'localhost'
-        port = 27017
-        path = 'history'
-        if 'host' in self.configdict:
-            host = self.configdict['host']
-        if 'port' in self.configdict:
-            port = int(self.configdict['port'])
-        if 'path' in self.configdict:
-            path = self.configdict['path']
+        host = self.configdict['host'] if 'host' in self.configdict else 'localhost'
+        port = int(self.configdict['port']) if 'port' in self.configdict else 27017
+        path = self.configdict['path'] if 'path' in self.configdict else 'history'
         return host, port, path

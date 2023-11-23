@@ -39,10 +39,7 @@ class BasePluginClient(object):
         self.config = config
         self.methods = self.entity.get_methods()
 
-        url = None
-        if self.config.fetch_mq_env():
-            url = self.config.fetch_mq_env()['url']
-
+        url = self.config.fetch_mq_env()['url'] if self.config.fetch_mq_env() else None
         self.mq_serv = MsgQueueService(
             self.name,
             url=url,
@@ -120,13 +117,10 @@ class BasePluginClient(object):
                 'data': 'No yet implemented in this Plugin'}
 
     def download(self, file_name, file_str):
-        file_path = os.path.split(os.path.realpath(self.entity.file_name))[
-            0] + '/' + file_name
-        file = open(file_path, 'wb')
-        file.write(b64decode(file_str))
-        file.close()
-        json_out = {'code': ReturnCodes.Good, 'data': "Success"}
-        return json_out
+        file_path = f'{os.path.split(os.path.realpath(self.entity.file_name))[0]}/{file_name}'
+        with open(file_path, 'wb') as file:
+            file.write(b64decode(file_str))
+        return {'code': ReturnCodes.Good, 'data': "Success"}
 
     def _prepare_methods(self, method, input_list):
         m = self.methods.get(method, None)
@@ -135,10 +129,7 @@ class BasePluginClient(object):
             return False, args, 'the method is not defined'
 
         flag, args, msg = m.check_inputs(input_list)
-        if not flag:
-            return False, [], msg
-
-        return True, args, 'OK'
+        return (False, [], msg) if not flag else (True, args, 'OK')
 
     def plugin_call(self, method, msg):
         flag, args, msg = self._prepare_methods(method, msg)
@@ -179,16 +170,15 @@ class BasePluginClient(object):
         if 'method' in json_in:
             method = json_in['method'] if 'method' in json_in else None
             data = json_in['data'] if 'data' in json_in else None
-            json_out = self.plugin_call(method, data)
-            return json_out
+            return self.plugin_call(method, data)
         else:
-            logger.info('incorrect client request. %s' % json.dumps(json_in))
+            logger.info(f'incorrect client request. {json.dumps(json_in)}')
 
     def _notify(self, json_in):
         if 'variable' in json_in:
             self._do_write_variable(json_in)
         else:
-            logger.info('incorrect client request. %s' % json.dumps(json_in))
+            logger.info(f'incorrect client request. {json.dumps(json_in)}')
 
     def _thread_monitor(self, *args, **kwargs):
         while self.is_alive():

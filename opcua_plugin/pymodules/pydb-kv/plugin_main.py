@@ -73,7 +73,7 @@ class KvPluginClient(BasePluginClient):
         self._start()
 
     def is_client_connected(self, *args, **kwargs):
-        return True if self.db else False
+        return bool(self.db)
 
     def get_client_state(self, *args, **kwargs):
         return {
@@ -132,9 +132,7 @@ class KvPluginClient(BasePluginClient):
         return {'code': ret_code, 'data': result}
 
     def plugin_poll(self):
-        msg = 'online'
-        if not self.is_client_connected():
-            msg = 'offline'
+        msg = 'offline' if not self.is_client_connected() else 'online'
         self.pub_event(self.plugin_node.name, msg, '')
 
     @classmethod

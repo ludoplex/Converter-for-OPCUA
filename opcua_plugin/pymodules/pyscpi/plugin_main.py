@@ -35,10 +35,9 @@ class SCPISerialClient(object):
         self.clients = []
 
     def getcli(self, port):
-        for client in self.clients:
-            if port == client['port']:
-                return client
-        return None
+        return next(
+            (client for client in self.clients if port == client['port']), None
+        )
 
     def addcli(self, port, param):
         com_id = port[4:]
@@ -80,10 +79,10 @@ class SCPISerialClient(object):
             if not ser_client.isOpen():
                 ser_client.open()
             cli['state'] = 'opened'
-            result = 'serial port %s is opened' % port
+            result = f'serial port {port} is opened'
         except BaseException:  # serial.SerialException as e:
-            logger.exception('failed to open serial port %s' % port)
-            result = 'failed to open serial port %s' % port
+            logger.exception(f'failed to open serial port {port}')
+            result = f'failed to open serial port {port}'
             errorcode = ReturnCodes.SCPI_SerialOpenFail
         return errorcode, result
 
@@ -96,17 +95,17 @@ class SCPISerialClient(object):
                 ser_client.close()
                 cli['state'] = 'closed'
                 if not ser_client.isOpen():
-                    result = 'serial port %s was closed' % port
+                    result = f'serial port {port} was closed'
                 else:
                     errorcode = ReturnCodes.SCPI_SerialCloseFail
-                    result = 'failed to close serial port %s' % port
+                    result = f'failed to close serial port {port}'
             else:
                 errorcode = ReturnCodes.SCPI_SerialNotOpen
-                result = 'serial port %s was not opened' % port
+                result = f'serial port {port} was not opened'
         except BaseException:  # serial.SerialException as e:
             errorcode = ReturnCodes.SCPI_SerialCloseFail
-            result = 'failed to close serial port %s' % port
-            logger.exception('failed to close serial port %s' % port)
+            result = f'failed to close serial port {port}'
+            logger.exception(f'failed to close serial port {port}')
         return errorcode, result
 
     def send(self, port, data):
@@ -116,7 +115,7 @@ class SCPISerialClient(object):
             if cli is not None:
                 ser_client = cli['client']
                 ser_client.write(data.encode("ascii"))
-                if ((data == "*IDN?\r\n") or (data == "SYST:VERS?\r\n")):
+                if data in ["*IDN?\r\n", "SYST:VERS?\r\n"]:
                     str = ser_client.readline()  # (eol='\r\n')
                     result = str.decode('utf8')
                 else:
@@ -124,19 +123,17 @@ class SCPISerialClient(object):
                     result = 'the command intendedly no response'
             else:
                 errorcode = ReturnCodes.SCPI_SerialNoInited
-                result = 'serial port %s was not initiated' % port
+                result = f'serial port {port} was not initiated'
         except BaseException:  # serial.SerialException as e:
             errorcode = ReturnCodes.SCPI_SerialSendFail
-            result = 'failed to send data over serial port %s' % port
-            logger.exception('failed to send data over serial port %s' % port)
+            result = f'failed to send data over serial port {port}'
+            logger.exception(f'failed to send data over serial port {port}')
         return errorcode, result
 
     def state(self, port=None):
         errorcode = ReturnCodes.Good
         if port is None:
-            result = []
-            for client in self.clients:
-                result.append({client['port']: client['state']})
+            result = [{client['port']: client['state']} for client in self.clients]
             return errorcode, result
         try:
             cli = self.getcli(port)
@@ -145,7 +142,7 @@ class SCPISerialClient(object):
                 result = "opened" if ser_client.isOpen() else 'closed'
             else:
                 errorcode = ReturnCodes.SCPI_SerialListStateFail
-                result = 'failed to list state of serial port %s because it is not initiated' % port
+                result = f'failed to list state of serial port {port} because it is not initiated'
         except BaseException:  # serial.SerialException as e:
             errorcode = ReturnCodes.SCPI_SerialReadStateException
             result = 'hit exception when read serial port % state' % port
@@ -160,10 +157,10 @@ class SCPITcpClient(object):
         self.clients = []
 
     def getcli(self, host_str):
-        for client in self.clients:
-            if host_str == client['host_str']:
-                return client
-        return None
+        return next(
+            (client for client in self.clients if host_str == client['host_str']),
+            None,
+        )
 
     def addcli(self, host_str):
         # host_str "tcp:127.0.0.1:80"
@@ -183,19 +180,18 @@ class SCPITcpClient(object):
             cli = self.getcli(host_str)
             if cli is None:
                 self.addcli(host_str)
-            else:
-                if cli['state'] == 'closed':
-                    host = host_str.split(':')[1]
-                    port = int(host_str.split(':')[2])
-                    client = socket(AF_INET, SOCK_STREAM)
-                    client.connect((host, port))
-                    cli['client'] = client
-                    cli['state'] = 'opened'
-            result = 'connection %s was opened' % host_str
+            elif cli['state'] == 'closed':
+                host = host_str.split(':')[1]
+                port = int(host_str.split(':')[2])
+                client = socket(AF_INET, SOCK_STREAM)
+                client.connect((host, port))
+                cli['client'] = client
+                cli['state'] = 'opened'
+            result = f'connection {host_str} was opened'
         except BaseException:  # socket.error as e:
             errorcode = ReturnCodes.SCPI_TcpOpenException
-            result = 'failed to create connection %s' % host_str
-            logger.exception('failed to create connection %s' % host_str)
+            result = f'failed to create connection {host_str}'
+            logger.exception(f'failed to create connection {host_str}')
 
         return errorcode, result
 
@@ -207,14 +203,14 @@ class SCPITcpClient(object):
             if cli is not None:
                 cli['client'].close()
                 cli['state'] = 'closed'
-                result = 'socket connection %s was closed' % host_str
+                result = f'socket connection {host_str} was closed'
             else:
                 errorcode = ReturnCodes.SCPI_TcpCloseFail
-                result = 'failed to close socket connection %s because it is not exist' % host_str
+                result = f'failed to close socket connection {host_str} because it is not exist'
         except BaseException:
             errorcode = ReturnCodes.SCPI_TcpCloseException
-            result = 'failed to close connection %s' % host_str
-            logger.exception('failed to close connection %s' % host_str)
+            result = f'failed to close connection {host_str}'
+            logger.exception(f'failed to close connection {host_str}')
 
         return errorcode, result
 
@@ -229,22 +225,19 @@ class SCPITcpClient(object):
                 result = recv.decode('utf8')
             else:
                 errorcode = ReturnCodes.SCPI_TcpNoInited
-                result = 'failed to send data over socket connection %s because it was not initiated' % host_str
+                result = f'failed to send data over socket connection {host_str} because it was not initiated'
         except BaseException:
             errorcode = ReturnCodes.SCPI_TcpSendException
-            result = 'failed to send data over socket connection %s, socket was %s' % (
-                host_str, cli['state'])
+            result = f"failed to send data over socket connection {host_str}, socket was {cli['state']}"
             logger.exception(
-                'failed to send data over socket connection %s, socket was %s' %
-                (host_str, cli['state']))
+                f"failed to send data over socket connection {host_str}, socket was {cli['state']}"
+            )
         return errorcode, result
 
     def state(self, host_str=None):
         errorcode = ReturnCodes.Good
         if host_str is None:
-            result = []
-            for client in self.clients:
-                result.append({client['host_str']: client['state']})
+            result = [{client['host_str']: client['state']} for client in self.clients]
             return errorcode, result
         try:
             cli = self.getcli(host_str)
@@ -252,7 +245,7 @@ class SCPITcpClient(object):
                 result = cli['state']
             else:
                 errorcode = ReturnCodes.SCPI_TcpListStateFail
-                result = 'failed to list state of socket connection %s because it is not created' % host_str
+                result = f'failed to list state of socket connection {host_str} because it is not created'
         except BaseException:
             errorcode = ReturnCodes.SCPI_TcpReadStateException
             result = 'hit exception when read socket % state' % host_str
@@ -283,32 +276,29 @@ class SCPIPluginClient(BasePluginClient):
             retcode, result = self.scpi_serial.open(link, setting)
         elif ('tcp' in link):
             retcode, result = self.scpi_tcp.open(link)
-        json_out = {'code': retcode, 'data': result}
-        return json_out
+        return {'code': retcode, 'data': result}
 
     def close(self, link):
         if ('ser' in link):
             retcode, result = self.scpi_serial.close(link)
         elif ('tcp' in link):
             retcode, result = self.scpi_tcp.close(link)
-        json_out = {'code': retcode, 'data': result}
-        return json_out
+        return {'code': retcode, 'data': result}
 
     def send(self, link, data):
         if ('ser' in link):
             retcode, result = self.scpi_serial.send(link, data)
         elif ('tcp' in link):
             retcode, result = self.scpi_tcp.send(link, data)
-        json_out = {'code': retcode, 'data': result}
-        return json_out
+        return {'code': retcode, 'data': result}
 
     def state(self, link):
         if ('ser' in link):
             retcode, result = self.scpi_serial.state(link)
-            json_out = {'code': retcode, 'data': result}
+            return {'code': retcode, 'data': result}
         elif ('tcp' in link):
             retcode, result = self.scpi_tcp.state(link)
-            json_out = {'code': retcode, 'data': result}
+            return {'code': retcode, 'data': result}
         else:
             result = []
             sercode, ser_states = self.scpi_serial.state()
@@ -317,8 +307,7 @@ class SCPIPluginClient(BasePluginClient):
             tcpcode, tcp_states = self.scpi_tcp.state()
             if tcpcode == ReturnCodes.Good:
                 result.append(tcp_states)
-            json_out = {'code': ReturnCodes.Good, 'data': json.dumps(result)}
-        return json_out
+            return {'code': ReturnCodes.Good, 'data': json.dumps(result)}
 
 
 def plugin_main(*args, **kwargs):

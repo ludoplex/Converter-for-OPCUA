@@ -18,9 +18,9 @@ import sys
 import unittest
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, SCRIPT_DIR + '/../')
-sys.path.insert(0, SCRIPT_DIR + '/../../../../pyutilities')
-sys.path.insert(0, SCRIPT_DIR + '/../../')
+sys.path.insert(0, f'{SCRIPT_DIR}/../')
+sys.path.insert(0, f'{SCRIPT_DIR}/../../../../pyutilities')
+sys.path.insert(0, f'{SCRIPT_DIR}/../../')
 
 from plugin_main import ModbusPluginClient
 from plugin_main import ModbusPluginEntity
@@ -29,8 +29,8 @@ from plugin_main import ModbusPluginConfig
 
 class TestPluginMain(unittest.TestCase):
     def setUp(self):
-        e = ModbusPluginEntity(SCRIPT_DIR + '/../plugin_modbus.json')
-        c = ModbusPluginConfig(SCRIPT_DIR + '/../default.conf')
+        e = ModbusPluginEntity(f'{SCRIPT_DIR}/../plugin_modbus.json')
+        c = ModbusPluginConfig(f'{SCRIPT_DIR}/../default.conf')
         self.t = ModbusPluginClient(e, c)
 
     def tearDown(self):

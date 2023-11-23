@@ -37,7 +37,7 @@ def daemonize(pidfile=None, progname=None, stdin='/dev/null',
                 os.kill(pid, 0)
                 if not progname:
                     progname = os.path.basename(sys.argv[0])
-                sys.exit('%s is already running with pid %s' % (progname, pid))
+                sys.exit(f'{progname} is already running with pid {pid}')
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise

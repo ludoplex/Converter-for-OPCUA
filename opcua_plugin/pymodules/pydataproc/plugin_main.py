@@ -49,7 +49,7 @@ class PluginClient(BasePluginClient):
         super(PluginClient, self).__init__(entity, config)
         self.plugin_folder_path = os.path.dirname(
             os.path.realpath(self.entity.file_name))
-        self.udf_folder_path = self.plugin_folder_path + '/udf'
+        self.udf_folder_path = f'{self.plugin_folder_path}/udf'
         # make udf folder if not exist
         if not os.path.exists(self.udf_folder_path):
             os.makedirs(self.udf_folder_path)
@@ -113,7 +113,7 @@ class PluginClient(BasePluginClient):
 
     def _set_udf_file(self, filename):
         self.udf_file = filename
-        self.udf_file_path = self.udf_folder_path + '/' + self.udf_file
+        self.udf_file_path = f'{self.udf_folder_path}/{self.udf_file}'
 
     def start(self):
         self._start_processing()
@@ -133,10 +133,9 @@ class PluginClient(BasePluginClient):
             if not self.udf_enabled:
                 self.udf_enabled = True
                 self._start_processing()
-        else:
-            if self.udf_enabled:
-                self.udf_enabled = False
-                self._stop_processing()
+        elif self.udf_enabled:
+            self.udf_enabled = False
+            self._stop_processing()
 
         return {'code': ReturnCodes.Good, 'data': 'Success'}
 

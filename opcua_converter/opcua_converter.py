@@ -66,12 +66,12 @@ class SubHandler(object):
         self._thread = None
 
     def loop(self):
-        delete_list = []
         now = datetime.datetime.now()
-        for name, p in self.plugins.items():
-            if (now - p.get('last_time')).total_seconds() > self.HEARTBEAT_WAIT:
-                delete_list.append(name)
-
+        delete_list = [
+            name
+            for name, p in self.plugins.items()
+            if (now - p.get('last_time')).total_seconds() > self.HEARTBEAT_WAIT
+        ]
         for d in delete_list:
             self._delete_plugin(d)
 
@@ -87,16 +87,10 @@ class SubHandler(object):
             self._thread.start()
 
     def _online(self, plugin_name):
-        p = self.plugins.get(plugin_name, None)
-        if not p:  # first online.
-            self.plugins[plugin_name] = {
-                'node': None,
-                'last_time': datetime.datetime.now(),
-            }
-
-        else:  # second online
-            node = p.get('node', None)
-            if not node:
+        if p := self.plugins.get(plugin_name, None):
+            if node := p.get('node', None):
+                p['last_time'] = datetime.datetime.now()
+            else:
                 now = datetime.datetime.now()
                 if (now - p.get('last_time')
                         ).total_seconds() > 1:  # maybe third online
@@ -111,14 +105,15 @@ class SubHandler(object):
                         self.load_rd(plugin_name)
                     else:
                         p['node'] = plugin_node
-            else:
-                p['last_time'] = datetime.datetime.now()
+        else:
+            self.plugins[plugin_name] = {
+                'node': None,
+                'last_time': datetime.datetime.now(),
+            }
 
     def _delete_plugin(self, plugin_name):
-        p = self.plugins.get(plugin_name, None)
-        if p:
-            plugin_node = p.get('node', None)
-            if plugin_node:
+        if p := self.plugins.get(plugin_name, None):
+            if plugin_node := p.get('node', None):
                 self.server.delete_nodes([plugin_node, ], recursive=True)
             del self.plugins[plugin_name]
 
@@ -126,18 +121,17 @@ class SubHandler(object):
         json_in = {'method': 'getrd'}
         retcode, json_out = self.adapter.plugin_call(plugin_name, json_in)
         if retcode == 0 and json_out:
-            logger.debug('json_out:' + json.dumps(json_out))
+            logger.debug(f'json_out:{json.dumps(json_out)}')
             json_data = json.loads(json_out['data'])
-            file_name = '.plugin_' + plugin_name + '.json'
-            f = open(file_name, 'wb')
-            f.write(json.dumps(json_data).encode('utf-8'))
-            f.close()
+            file_name = f'.plugin_{plugin_name}.json'
+            with open(file_name, 'wb') as f:
+                f.write(json.dumps(json_data).encode('utf-8'))
             # import some nodes from json
             importer = JsonImporter(self.server, self.adapter, plugin_name)
             importer.import_json(file_name)
 
         else:
-            logger.error('get resource fail to plugin:' + plugin_name)
+            logger.error(f'get resource fail to plugin:{plugin_name}')
 
     def set_value(self, parent, dev_name, var_name, data, it_level=0):
         if parent is None:
@@ -148,9 +142,9 @@ class SubHandler(object):
                 sub_nodes = node.get_children()
                 for var in sub_nodes:
                     if var_name == var.get_display_name().to_string():
-                        logger.debug("    Dev Name: " + dev_name)
-                        logger.debug("    Var Name: " + var_name)
-                        logger.debug("    Var Data: " + str(data))
+                        logger.debug(f"    Dev Name: {dev_name}")
+                        logger.debug(f"    Var Name: {var_name}")
+                        logger.debug(f"    Var Data: {str(data)}")
                         if len(data):
                             var.set_value(data)
                             return True
@@ -170,7 +164,7 @@ class SubHandler(object):
             if object.get_display_name().to_string() != "Server":
                 if plugin_name in object.get_display_name().to_string():
                     logger.debug("New data change Event:")
-                    logger.debug("    Node: " + plugin_name)
+                    logger.debug(f"    Node: {plugin_name}")
                     self.set_value(object, dev_name, var_name, data)
 
     def event_notification(self, plugin_name, dev_name, event_name, data):
@@ -178,8 +172,6 @@ class SubHandler(object):
             self._online(plugin_name)
         elif event_name == 'exit':
             self._delete_plugin(plugin_name)
-        else:
-            pass
 
 
 def ConfigHistoryStorage(server):

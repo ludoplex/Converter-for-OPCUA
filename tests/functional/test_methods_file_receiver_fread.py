@@ -27,7 +27,7 @@ if __name__ == "__main__":
         print('Usage: python test_method_fread.py <image_id>')
         sys.exit(-1)
 
-    file_name = sys.argv[1] + '.bmp'
+    file_name = f'{sys.argv[1]}.bmp'
     client = Client(server_endpoint, 60)
     client.connect()
 
@@ -52,9 +52,8 @@ if __name__ == "__main__":
     print('method result code is: ', res[0])
     if int(res[0]) is 0:
         file_bytes = b64decode(res[1])
-        file = open(file_name, 'wb')
-        file.write(file_bytes)
-        file.close()
+        with open(file_name, 'wb') as file:
+            file.write(file_bytes)
         print('file saved', file_name)
 
     print('\r\ndone')

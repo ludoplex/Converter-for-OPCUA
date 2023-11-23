@@ -60,7 +60,7 @@ def main():
             daemonize(pidfile=options.pidfile, progname='opcua_plugin')
 
     except OSError as e:
-        print("%s: %s" % (e.__class__.__name__, e), file=sys.stderr)
+        print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         pass

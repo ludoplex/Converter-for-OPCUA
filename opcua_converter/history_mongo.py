@@ -98,8 +98,7 @@ class HistoryMongo(HistoryStorageInterface):
     def read_node_history(self, node_id, start, end, nb_values):
         with self._lock:
             table = self._get_table_name(node_id)
-            if nb_values > 300:
-                nb_values = 300
+            nb_values = min(nb_values, 300)
             start_time, end_time, order, limit = self._get_bounds(
                 start, end, nb_values)
             cont = None
@@ -161,11 +160,7 @@ class HistoryMongo(HistoryStorageInterface):
             finally:
                 pass
 
-            # get this node's period from the period dict and calculate the
-            # limit
-            period = self._datachanges_period[event.SourceNode]
-
-            if period:
+            if period := self._datachanges_period[event.SourceNode]:
                 # after the insert, if a period was specified delete all
                 # records older than period
                 date_limit = datetime.utcnow() - period
@@ -219,8 +214,7 @@ class HistoryMongo(HistoryStorageInterface):
             return results, cont
 
     def _get_table_name(self, node_id):
-        return 'table_' + str(node_id.NamespaceIndex) + \
-            '_' + str(node_id.Identifier)
+        return f'table_{str(node_id.NamespaceIndex)}_{str(node_id.Identifier)}'
 
     def _get_event_fields(self, evtypes):
         """
@@ -237,10 +231,7 @@ class HistoryMongo(HistoryStorageInterface):
             ev_aggregate_fields.extend(
                 (events.get_event_properties_from_type_node(event_type)))
 
-        ev_fields = []
-        for field in set(ev_aggregate_fields):
-            ev_fields.append(field.get_display_name().Text)
-        return ev_fields
+        return [field.get_display_name().Text for field in set(ev_aggregate_fields)]
 
     @staticmethod
     def _get_bounds(start, end, nb_values):
@@ -261,11 +252,7 @@ class HistoryMongo(HistoryStorageInterface):
             start_time = end.isoformat(' ')
             end_time = start.isoformat(' ')
 
-        if nb_values:
-            limit = nb_values + 1  # add 1 to the number of values for retrieving a continuation point
-        else:
-            limit = -1  # in SQLite a LIMIT of -1 returns all results
-
+        limit = nb_values + 1 if nb_values else -1
         return start_time, end_time, order, limit
 
     def _format_event(self, event):
@@ -298,9 +285,7 @@ class HistoryMongo(HistoryStorageInterface):
             placeholders, False), tuple(ev_variant_binaries)
 
     def _get_event_columns(self, ev_fields):
-        fields = []
-        for field in ev_fields:
-            fields.append(field + ' BLOB')
+        fields = [f'{field} BLOB' for field in ev_fields]
         return self._list_to_sql_str(fields, False)
 
     def _get_select_clauses(self, source_id, evfilter):
@@ -324,12 +309,7 @@ class HistoryMongo(HistoryStorageInterface):
 
     @staticmethod
     def _list_to_sql_str(ls, quotes=True):
-        sql_str = ''
-        for item in ls:
-            if quotes:
-                sql_str += '"' + item + '", '
-            else:
-                sql_str += item + ', '
+        sql_str = ''.join(f'"{item}", ' if quotes else f'{item}, ' for item in ls)
         return sql_str[:-2]  # remove trailing space and comma for SQL syntax
 
     def stop(self):

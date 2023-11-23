@@ -41,7 +41,7 @@ def send_amqp_data():
                         message = Message.create(channel, line)
                         message.content_type = 'application/json'
                         message.publish(routing_key=AMQP_ROUTING_KEY)
-                        print("Sending message: {}".format(line))
+                        print(f"Sending message: {line}")
                         time.sleep(1)
             except BaseException:
                 channel.close()

@@ -92,9 +92,8 @@ if __name__ == "__main__":
         print('method result code is: ', res[0])
         if int(res[0]) is 0:
             file_bytes = b64decode(res[1])
-            file = open(file_name, 'wb')
-            file.write(file_bytes)
-            file.close()
+            with open(file_name, 'wb') as file:
+                file.write(file_bytes)
             print('file saved', file_name)
 
         print('\r\ntest fread api - read 6.bmp')
@@ -103,9 +102,8 @@ if __name__ == "__main__":
         print('method result code is: ', res[0])
         if int(res[0]) is 0:
             file_bytes = b64decode(res[1])
-            file = open(file_name, 'wb')
-            file.write(file_bytes)
-            file.close()
+            with open(file_name, 'wb') as file:
+                file.write(file_bytes)
             print('file saved', file_name)
 
         print('\r\ndone')

@@ -53,7 +53,7 @@ class AmqpClient:
             if self.process_func:
                 passed, result = self.process_func(message.body)
                 if passed:
-                    logger.debug("Sending result: {}".format(result))
+                    logger.debug(f"Sending result: {result}")
                     message = Message.create(self.channel, body=result)
                     message.content_type = 'application/json'
                     message.publish(routing_key=self.sink_queue)
@@ -82,9 +82,9 @@ class AmqpClient:
 
 if __name__ == '__main__':
 
-    UDF_FOLDER_PATH = os.path.dirname(os.path.realpath(__file__)) + "/udf"
+    UDF_FOLDER_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/udf"
     UDF_FILE_NAME = "udf_simple.py"
-    UDF_FILE_PATH = UDF_FOLDER_PATH + "/" + UDF_FILE_NAME
+    UDF_FILE_PATH = f"{UDF_FOLDER_PATH}/{UDF_FILE_NAME}"
 
     try:
         sys.path.insert(0, UDF_FOLDER_PATH)

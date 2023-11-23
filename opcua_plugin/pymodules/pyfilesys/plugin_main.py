@@ -51,34 +51,30 @@ class PluginClient(BasePluginClient):
             os.mkdir(self.folder_path)
 
     def fread(self, filename):
-        file_path = self.folder_path + '/' + filename
+        file_path = f'{self.folder_path}/{filename}'
         print(file_path)
         try:
-            file_handle = open(file_path, 'rb')
-            file_data = file_handle.read()
-            file_handle.close()
+            with open(file_path, 'rb') as file_handle:
+                file_data = file_handle.read()
         except Exception as e:
             logger.exception("fread error: %s", e.strerror)
             return {'code': ReturnCodes.PLUGIN_ParamError, 'data': e.strerror}
 
-        if isinstance(file_data, bytes):
-            base64_bytes = b64encode(file_data)
-            base64_string = base64_bytes.decode('utf-8')
-            json_out = {'code': ReturnCodes.Good, 'data': base64_string}
-        else:
+        if not isinstance(file_data, bytes):
             return {
                 'code': ReturnCodes.PLUGIN_ParamError,
                 'data': 'File data corruption'}
 
-        return json_out
+        base64_bytes = b64encode(file_data)
+        base64_string = base64_bytes.decode('utf-8')
+        return {'code': ReturnCodes.Good, 'data': base64_string}
 
     def fwrite(self, filename, bytes):
         file_bytes = b64decode(bytes)
-        file_path = self.folder_path + '/' + filename
+        file_path = f'{self.folder_path}/{filename}'
         try:
-            file = open(file_path, 'wb')
-            file.write(file_bytes)
-            file.close()
+            with open(file_path, 'wb') as file:
+                file.write(file_bytes)
             json_out = {'code': ReturnCodes.Good, 'data': "Success"}
         except Exception as e:
             logger.exception("fread error: %s", e.strerror)

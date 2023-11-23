@@ -96,7 +96,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         obj = root.get_child(["0:Objects", "2:MqttPlugin"])
-        print(sys.argv[1] + " data is: ", data)
+        print(f"{sys.argv[1]} data is: ", data)
 
         result = data.read_raw_history(None, None)
         # decode history data

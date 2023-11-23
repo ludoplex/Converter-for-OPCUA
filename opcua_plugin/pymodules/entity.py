@@ -65,7 +65,7 @@ class Method(object):
                 if 'default' in node:
                     default = node.get('default', None)
                     has_default = True
-            if has_default is not True:
+            if not has_default:
                 self.required += 1
 
             node_type = PARSE_TYPE.get(node_type)
@@ -77,17 +77,19 @@ class Method(object):
 
     def check_inputs(self, input_list):
         args = []
-        if not input_list:
-            if self.required > 0:
-                return False, [], '(%s) method expect at least (%s) positional arguments, but (%s) were given' % (
-                    self.name, self.required, 0)
-        else:
+        if input_list:
             if len(input_list) < self.required:
-                return False, [], '(%s) method expect at least (%s) positional arguments, but (%s) were given' % (
-                    self.name, self.required, len(input_list))
+                return (
+                    False,
+                    [],
+                    f'({self.name}) method expect at least ({self.required}) positional arguments, but ({len(input_list)}) were given',
+                )
             elif len(input_list) > len(self.input_params):
-                return False, [], '(%s) method expect most (%s) positional arguments, but (%s) were given' % (
-                    self.name, len(self.input_params), len(input_list))
+                return (
+                    False,
+                    [],
+                    f'({self.name}) method expect most ({len(self.input_params)}) positional arguments, but ({len(input_list)}) were given',
+                )
             else:
                 i = 0
                 flag = True
@@ -97,8 +99,11 @@ class Method(object):
                         if self.input_params[i]['has_default'] is True:
                             new_input = self.input_params[i]['default']
                         else:
-                            return False, None, '(%s) method the idx (%s) parameter not allow empty' % (
-                                self.name, i + 1)
+                            return (
+                                False,
+                                None,
+                                f'({self.name}) method the idx ({i + 1}) parameter not allow empty',
+                            )
 
                     if not isinstance(new_input, self.input_params[i]['type']):
                         try:
@@ -109,6 +114,12 @@ class Method(object):
                     i += 1
                     args.append(new_input)
 
+        elif self.required > 0:
+            return (
+                False,
+                [],
+                f'({self.name}) method expect at least ({self.required}) positional arguments, but (0) were given',
+            )
         return True, args, 'OK'
 
 
@@ -139,10 +150,7 @@ class Node(object):
         return self.children
 
     def get_child(self, name):
-        for child in self.children:
-            if child.name == name:
-                return child
-        return None
+        return next((child for child in self.children if child.name == name), None)
 
     def add_pair_friend(self, node):
         self.pair_friend = node
@@ -235,12 +243,8 @@ class BasePluginEntity(object):
         return None
 
     def get_children_by_type(self, parent, type):
-        nodes = []
         children = parent.get_children()
-        for child in children:
-            if child.type == type:
-                nodes.append(child)
-        return nodes
+        return [child for child in children if child.type == type]
 
     def get_custom_nodes(self):
         return self.custom_nodes
@@ -248,8 +252,8 @@ class BasePluginEntity(object):
     def get_property(self, node, name):
         children = node.get_children()
         for child in children:
-            if child.type == NodeType.Property:
-                if child.name == name:
+            if child.name == name:
+                if child.type == NodeType.Property:
                     return child
         return None
 
@@ -270,9 +274,8 @@ class BasePluginEntity(object):
             self.add_api_method(api['name'], ins, api['output'])
 
     def loads(self, json_file):
-        file = open(json_file, 'r')
-        json_data = file.read()
-        file.close()
+        with open(json_file, 'r') as file:
+            json_data = file.read()
         self.data = json.loads(json_data)
         self.topic_name = self.data['user_data']['topic']
         self.plugin_name = self.topic_name.split('/')[1]

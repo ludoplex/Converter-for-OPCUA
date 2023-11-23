@@ -128,10 +128,10 @@ class JsonImporter(object):
         """
         maps the import aliases to the correct namespaces
         """
-        aliases_mapped = {}
-        for alias, node_id in aliases.items():
-            aliases_mapped[alias] = self._migrate_ns(self.to_nodeid(node_id))
-        return aliases_mapped
+        return {
+            alias: self._migrate_ns(self.to_nodeid(node_id))
+            for alias, node_id in aliases.items()
+        }
 
     def _set_attr(self, key, val, obj):
         if key == "name":
@@ -141,10 +141,7 @@ class JsonImporter(object):
         elif key == "init_value":
             obj.init_value = val
         elif key == "writable":
-            if val == "yes":
-                obj.writable = True
-            else:
-                obj.writable = False
+            obj.writable = val == "yes"
         elif key == "rpc_name":
             obj.rpc_name = val
         elif key == "value":
@@ -205,27 +202,25 @@ class JsonImporter(object):
             output_args)
 
     def _parse_varianttype(self, type):
-        if type == None:
-            return ua.VariantType.Null
-        elif type == 'Boolean':
+        if type == 'Boolean':
             return ua.VariantType.Boolean
-        elif type == 'Double':
-            return ua.VariantType.Double
-        elif type == 'Int64':
-            return ua.VariantType.Int64
-        elif type == 'String':
-            return ua.VariantType.String
         elif type == 'ByteString':
             return ua.VariantType.ByteString
         elif type == 'DateTime':
             return ua.VariantType.DateTime
+        elif type == 'Double':
+            return ua.VariantType.Double
         elif type == 'Guid':
             return ua.VariantType.Guid
+        elif type == 'Int64':
+            return ua.VariantType.Int64
+        elif type == 'String':
+            return ua.VariantType.String
         else:
             return ua.VariantType.Null
 
     def _parse_datatype(self, type):
-        if type == None:
+        if type is None:
             return None
         return ua.NodeId(getattr(ua.ObjectIds, self._parse_varianttype(type).name))
 
@@ -293,11 +288,10 @@ class JsonImporter(object):
             for i in range(len(folder['methods'])):
                 self.parse_method(newfolder, idx, folder['methods'][i])
 
-        all_object_dicts = {}
         all_object_types = self.server.nodes.base_object_type.get_children()
-        for t in all_object_types:
-            all_object_dicts[t.get_display_name().to_string()] = t
-
+        all_object_dicts = {
+            t.get_display_name().to_string(): t for t in all_object_types
+        }
         for object_type_name, object_type in all_object_dicts.items():
             # object_type_name = type.get_display_name().to_string()
             if object_type_name in folder:
@@ -321,11 +315,10 @@ class JsonImporter(object):
 
     def parse_custom_type(self, parent, idx, object):
         if parent is None:
-            all_object_dicts = {}
             all_object_types = self.server.nodes.base_object_type.get_children()
-            for t in all_object_types:
-                all_object_dicts[t.get_display_name().to_string()] = t
-
+            all_object_dicts = {
+                t.get_display_name().to_string(): t for t in all_object_types
+            }
             if not all_object_dicts.get(object['name'], None):
                 newobject = self.server.nodes.base_object_type.add_object_type(
                     0, object['name'])
